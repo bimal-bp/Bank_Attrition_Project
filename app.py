@@ -1,62 +1,78 @@
+import streamlit as st
 import pandas as pd
-import joblib
+import pickle
 
-# Load the trained model and scaler
-best_rf_model = joblib.load('random_forest_model.pkl')
-scaler = joblib.load('scaler.pkl')  # Load the saved scaler
+# Load your trained model and pre-processing objects
+with open('model.pkl', 'rb') as model_file:
+    model = pickle.load(model_file)
 
+with open('calr.pkl', 'rb') as calr_file:
+    calr = pickle.load(calr_file)
 
-# Original training columns (ensure the order matches exactly with the training data)
-columns = [
-    "Customer_Age", "Credit_Limit", "Total_Transactions_Count", "Total_Transaction_Amount", 
-    "Inactive_Months_12_Months", "Transaction_Count_Change_Q4_Q1", "Total_Products_Used", 
-    "Average_Credit_Utilization", "Customer_Contacts_12_Months", "Transaction_Amount_Change_Q4_Q1", 
-    "Months_as_Customer", "College", "Doctorate", "Graduate", "High School", "Post-Graduate", 
-    "Uneducated", "$120K +", "$40K - $60K", "$60K - $80K", "$80K - $120K", "Less than $40K"
-]
+# Function to make predictions
+def predict(data):
+    # Assuming the model expects a DataFrame with the same column names
+    prediction = model.predict(data)
+    return prediction
 
-# Input Data (Ensure the structure matches the training data exactly)
-data = {
-    "Customer_Age": [31, 40],
-    "Credit_Limit": [3768.0, 2594.0],
-    "Total_Transactions_Count": [71, 71],
-    "Total_Transaction_Amount": [6639, 3872],
-    "Inactive_Months_12_Months": [2, 1],
-    "Transaction_Count_Change_Q4_Q1": [1.152, 0.511],
-    "Total_Products_Used": [1, 6],
-    "Average_Credit_Utilization": [0.000, 0.832],
-    "Customer_Contacts_12_Months": [2, 1],
-    "Transaction_Amount_Change_Q4_Q1": [0.799, 0.792],
-    "College": [0, 0],
-    "Doctorate": [0, 0],
-    "Graduate": [1, 0],
-    "High School": [0, 0],
-    "Post-Graduate": [0, 0],
-    "Uneducated": [0, 0],
-    "$120K +": [0, 0],
-    "$40K - $60K": [0, 0],
-    "$60K - $80K": [0, 0],
-    "$80K - $120K": [0, 0],
-    "Less than $40K": [1, 1]
+# Create the Streamlit app layout
+st.title('Customer Churn Prediction')
+
+st.sidebar.header('Input Data')
+
+# Define input fields based on your features
+Customer_Age = st.sidebar.number_input('Customer Age', min_value=18, max_value=100, value=30)
+Credit_Limit = st.sidebar.number_input('Credit Limit', min_value=0, value=5000)
+Total_Transactions_Count = st.sidebar.number_input('Total Transactions Count', min_value=0, value=50)
+Total_Transaction_Amount = st.sidebar.number_input('Total Transaction Amount', min_value=0, value=1000)
+Inactive_Months_12_Months = st.sidebar.number_input('Inactive Months (12 Months)', min_value=0, value=3)
+Transaction_Count_Change_Q4_Q1 = st.sidebar.number_input('Transaction Count Change Q4/Q1', value=0)
+Total_Products_Used = st.sidebar.number_input('Total Products Used', min_value=1, value=3)
+Average_Credit_Utilization = st.sidebar.number_input('Average Credit Utilization', min_value=0.0, max_value=1.0, value=0.5)
+Customer_Contacts_12_Months = st.sidebar.number_input('Customer Contacts (12 Months)', min_value=0, value=1)
+Transaction_Amount_Change_Q4_Q1 = st.sidebar.number_input('Transaction Amount Change Q4/Q1', value=0)
+Months_as_Customer = st.sidebar.number_input('Months as Customer', min_value=0, value=12)
+
+# For categorical features like education, you can use selectbox
+education = st.sidebar.selectbox('Education', ['College', 'Doctorate', 'Graduate', 'High School', 'Post-Graduate', 'Uneducated'])
+
+# For income categories
+income = st.sidebar.selectbox('Income', ['$120K +', '$40K - $60K', '$60K - $80K', '$80K - $120K', 'Less than $40K'])
+
+# Prepare input data
+input_data = {
+    'Customer_Age': [Customer_Age],
+    'Credit_Limit': [Credit_Limit],
+    'Total_Transactions_Count': [Total_Transactions_Count],
+    'Total_Transaction_Amount': [Total_Transaction_Amount],
+    'Inactive_Months_12_Months': [Inactive_Months_12_Months],
+    'Transaction_Count_Change_Q4_Q1': [Transaction_Count_Change_Q4_Q1],
+    'Total_Products_Used': [Total_Products_Used],
+    'Average_Credit_Utilization': [Average_Credit_Utilization],
+    'Customer_Contacts_12_Months': [Customer_Contacts_12_Months],
+    'Transaction_Amount_Change_Q4_Q1': [Transaction_Amount_Change_Q4_Q1],
+    'Months_as_Customer': [Months_as_Customer],
+    'College': [1 if education == 'College' else 0],
+    'Doctorate': [1 if education == 'Doctorate' else 0],
+    'Graduate': [1 if education == 'Graduate' else 0],
+    'High School': [1 if education == 'High School' else 0],
+    'Post-Graduate': [1 if education == 'Post-Graduate' else 0],
+    'Uneducated': [1 if education == 'Uneducated' else 0],
+    '$120K +': [1 if income == '$120K +' else 0],
+    '$40K - $60K': [1 if income == '$40K - $60K' else 0],
+    '$60K - $80K': [1 if income == '$60K - $80K' else 0],
+    '$80K - $120K': [1 if income == '$80K - $120K' else 0],
+    'Less than $40K': [1 if income == 'Less than $40K' else 0],
 }
 
-# Create a DataFrame for input data
-input_df = pd.DataFrame(data)
+# Convert to DataFrame
+input_df = pd.DataFrame(input_data)
 
-# Add the missing column ('Months_as_Customer') with placeholder values (e.g., 12 and 24)
-input_df['Months_as_Customer'] = [12, 24]  # Example placeholder values
+# Predict the result when button is clicked
+if st.sidebar.button('Predict'):
+    prediction = predict(input_df)
+    st.write(f'Predicted Churn: {prediction[0]}')
 
-# Ensure the column order is correct
-input_df = input_df[columns]
-
-# Check the columns after reordering
-print("Reordered Input Data Columns:", input_df.columns)
-
-# Scale the input data using the fitted scaler
-scaled_input = scaler.transform(input_df)
-
-# Predict using the loaded model
-predictions = best_rf_model.predict(scaled_input)
-
-# Output predictions
-print("Predictions:", predictions)
+# Run the app
+if __name__ == '__main__':
+    st.write('Use the sidebar to input the data and predict customer churn.')
