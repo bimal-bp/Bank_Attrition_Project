@@ -2,12 +2,20 @@ import streamlit as st
 import pandas as pd
 import pickle
 
-# Load your trained model and pre-processing objects
-with open('random_forest_model.pkl', 'rb') as model_file:
-    model = pickle.load(model_file)
+from sklearn.preprocessing import StandardScaler
 
-with open('scaler.pkl', 'rb') as calr_file:
-    calr = pickle.load(calr_file)
+
+# Example of saving the scaler
+scaler = StandardScaler()
+scaler.fit(X_train)  # Fit the scaler to the training data
+
+# Save the scaler to a file
+with open('scaler.pkl', 'wb') as scaler_file:
+    pickle.dump(scaler, scaler_file)
+
+# Example of saving the model
+with open('random_forest_model.pkl', 'wb') as model_file:
+    pickle.dump(model, model_file)
 
 # Function to preprocess input data
 def preprocess_input(input_df, calr):
