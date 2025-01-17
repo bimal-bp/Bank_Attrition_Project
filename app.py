@@ -9,10 +9,17 @@ with open('random_forest_model.pkl', 'rb') as model_file:
 with open('scaler.pkl', 'rb') as calr_file:
     calr = pickle.load(calr_file)
 
-# Function to make predictions
+# Function to preprocess input data
+def preprocess_input(input_df, calr):
+    # Apply the preprocessor (e.g., scaler, encoder) on the input
+    processed_data = calr.transform(input_df)
+    return processed_data
+
+# Update the predict function
 def predict(data):
-    # Assuming the model expects a DataFrame with the same column names
-    prediction = model.predict(data)
+    # Preprocess the data using calr.pkl before making predictions
+    processed_data = preprocess_input(data, calr)
+    prediction = model.predict(processed_data)
     return prediction
 
 # Create the Streamlit app layout
