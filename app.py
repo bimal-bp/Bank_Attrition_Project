@@ -3,7 +3,7 @@ import pandas as pd
 import joblib
 
 # Load the pre-trained model and scaler
-model = joblib.load("model.pkl")
+model = joblib.load("random_forest_model.pkll")
 scaler = joblib.load("scaler.pkl")
 
 # Define columns expected by the model
