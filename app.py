@@ -3,10 +3,10 @@ import pandas as pd
 import pickle
 
 # Load your trained model and pre-processing objects
-with open('model.pkl', 'rb') as model_file:
+with open('random_forest_model.pkl', 'rb') as model_file:
     model = pickle.load(model_file)
 
-with open('calr.pkl', 'rb') as calr_file:
+with open('scaler.pkl', 'rb') as calr_file:
     calr = pickle.load(calr_file)
 
 # Function to make predictions
