@@ -3,7 +3,7 @@ import pandas as pd
 import joblib
 
 # Load the pre-trained model and scaler
-model = joblib.load("random_forest_model.pkl")
+model = joblib.load("model.pkl")
 scaler = joblib.load("scaler.pkl")
 
 # Define columns expected by the model
@@ -22,7 +22,8 @@ def create_input_data(age, credit_limit, transactions_count, transaction_amount,
                       transaction_count_change, products_used, credit_utilization, contacts,
                       transaction_amount_change, education, income):
     # Initialize the input data
-    input_data = {
+    input_data = {col: 0 for col in expected_columns}
+    input_data.update({
         'Customer_Age': age,
         'Credit_Limit': credit_limit,
         'Total_Transactions_Count': transactions_count,
@@ -32,10 +33,8 @@ def create_input_data(age, credit_limit, transactions_count, transaction_amount,
         'Total_Products_Used': products_used,
         'Average_Credit_Utilization': credit_utilization,
         'Customer_Contacts_12_Months': contacts,
-        'Transaction_Amount_Change_Q4_Q1': transaction_amount_change,
-        'College': 0, 'Doctorate': 0, 'Graduate': 0, 'High School': 0, 'Post-Graduate': 0, 'Uneducated': 0,
-        '$120K +': 0, '$40K - $60K': 0, '$60K - $80K': 0, '$80K - $120K': 0, 'Less than $40K': 0
-    }
+        'Transaction_Amount_Change_Q4_Q1': transaction_amount_change
+    })
 
     # Set the appropriate education column
     if education in input_data:
@@ -77,9 +76,13 @@ if st.button("Predict"):
     input_data = create_input_data(age, credit_limit, transactions_count, transaction_amount, inactive_months,
                                    transaction_count_change, products_used, credit_utilization, contacts,
                                    transaction_amount_change, education, income)
+
+    # Ensure columns are in the correct order
+    input_data = input_data[expected_columns]
+
     # Scale the input data
     scaled_input = scaler.transform(input_data)
-    
+
     # Predict churn
     prediction = model.predict(scaled_input)
     result = "Churn" if prediction[0] == 1 else "No Churn"
