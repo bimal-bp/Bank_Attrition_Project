@@ -5,6 +5,7 @@ import joblib
 best_rf_model = joblib.load('random_forest_model.pkl')
 scaler = joblib.load('scaler.pkl')  # Load the saved scaler
 
+
 # Original training columns (ensure the order matches exactly with the training data)
 columns = [
     "Customer_Age", "Credit_Limit", "Total_Transactions_Count", "Total_Transaction_Amount", 
