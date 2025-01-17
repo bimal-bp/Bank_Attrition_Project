@@ -1,91 +1,61 @@
-import streamlit as st
 import pandas as pd
 import joblib
 
-# Load the pre-trained model and scaler
-model = joblib.load("random_forest_model.pkl")
-scaler = joblib.load("scaler.pkl")
+# Load the trained model and scaler
+best_rf_model = joblib.load('random_forest_model.pkl')
+scaler = joblib.load('scaler.pkl')  # Load the saved scaler
 
-# Define columns expected by the model
-expected_columns = [
-    'Customer_Age', 'Months_as_Customer', 'Credit_Limit', 'Total_Transactions_Count',
-    'Total_Transaction_Amount', 'Inactive_Months_12_Months',
-    'Transaction_Count_Change_Q4_Q1', 'Total_Products_Used',
-    'Average_Credit_Utilization', 'Customer_Contacts_12_Months',
-    'Transaction_Amount_Change_Q4_Q1', 'College', 'Doctorate', 'Graduate',
-    'High School', 'Post-Graduate', 'Uneducated', '$120K +', '$40K - $60K',
-    '$60K - $80K', '$80K - $120K', 'Less than $40K'
+# Original training columns (ensure the order matches exactly with the training data)
+columns = [
+    "Customer_Age", "Credit_Limit", "Total_Transactions_Count", "Total_Transaction_Amount", 
+    "Inactive_Months_12_Months", "Transaction_Count_Change_Q4_Q1", "Total_Products_Used", 
+    "Average_Credit_Utilization", "Customer_Contacts_12_Months", "Transaction_Amount_Change_Q4_Q1", 
+    "Months_as_Customer", "College", "Doctorate", "Graduate", "High School", "Post-Graduate", 
+    "Uneducated", "$120K +", "$40K - $60K", "$60K - $80K", "$80K - $120K", "Less than $40K"
 ]
 
-# Helper function to create input data
-def create_input_data(age, months, credit_limit, transactions_count, transaction_amount, inactive_months,
-                      transaction_count_change, products_used, credit_utilization, contacts,
-                      transaction_amount_change, education, income):
-    # Initialize the input data
-    input_data = {col: 0 for col in expected_columns}
-    input_data.update({
-        'Customer_Age': age,
-        'Months_as_Customer': months,
-        'Credit_Limit': credit_limit,
-        'Total_Transactions_Count': transactions_count,
-        'Total_Transaction_Amount': transaction_amount,
-        'Inactive_Months_12_Months': inactive_months,
-        'Transaction_Count_Change_Q4_Q1': transaction_count_change,
-        'Total_Products_Used': products_used,
-        'Average_Credit_Utilization': credit_utilization,
-        'Customer_Contacts_12_Months': contacts,
-        'Transaction_Amount_Change_Q4_Q1': transaction_amount_change
-    })
+# Input Data (Ensure the structure matches the training data exactly)
+data = {
+    "Customer_Age": [31, 40],
+    "Credit_Limit": [3768.0, 2594.0],
+    "Total_Transactions_Count": [71, 71],
+    "Total_Transaction_Amount": [6639, 3872],
+    "Inactive_Months_12_Months": [2, 1],
+    "Transaction_Count_Change_Q4_Q1": [1.152, 0.511],
+    "Total_Products_Used": [1, 6],
+    "Average_Credit_Utilization": [0.000, 0.832],
+    "Customer_Contacts_12_Months": [2, 1],
+    "Transaction_Amount_Change_Q4_Q1": [0.799, 0.792],
+    "College": [0, 0],
+    "Doctorate": [0, 0],
+    "Graduate": [1, 0],
+    "High School": [0, 0],
+    "Post-Graduate": [0, 0],
+    "Uneducated": [0, 0],
+    "$120K +": [0, 0],
+    "$40K - $60K": [0, 0],
+    "$60K - $80K": [0, 0],
+    "$80K - $120K": [0, 0],
+    "Less than $40K": [1, 1]
+}
 
-    # Set the appropriate education column
-    if education in input_data:
-        input_data[education] = 1
+# Create a DataFrame for input data
+input_df = pd.DataFrame(data)
 
-    # Set the appropriate income column
-    if income in input_data:
-        input_data[income] = 1
+# Add the missing column ('Months_as_Customer') with placeholder values (e.g., 12 and 24)
+input_df['Months_as_Customer'] = [12, 24]  # Example placeholder values
 
-    return pd.DataFrame([input_data])
+# Ensure the column order is correct
+input_df = input_df[columns]
 
-# Streamlit app
-st.title("Bank Customer Churn Prediction")
+# Check the columns after reordering
+print("Reordered Input Data Columns:", input_df.columns)
 
-# Input fields
-age = st.slider("Customer Age", min_value=18, max_value=100, value=35)
-months = st.number_input("Months as Customer", min_value=1, step=1, value=12)
-credit_limit = st.number_input("Credit Limit", min_value=0.0, step=100.0, value=5000.0)
-transactions_count = st.number_input("Total Transactions Count", min_value=0, step=1, value=50)
-transaction_amount = st.number_input("Total Transaction Amount", min_value=0.0, step=10.0, value=3000.0)
-inactive_months = st.slider("Inactive Months in Last 12 Months", min_value=0, max_value=12, value=3)
-transaction_count_change = st.number_input("Transaction Count Change (Q4 vs Q1)", min_value=-5.0, max_value=5.0, step=0.1, value=0.5)
-products_used = st.slider("Total Products Used", min_value=1, max_value=10, value=3)
-credit_utilization = st.slider("Average Credit Utilization Ratio", min_value=0.0, max_value=1.0, step=0.01, value=0.3)
-contacts = st.slider("Customer Contacts in Last 12 Months", min_value=0, max_value=12, value=3)
-transaction_amount_change = st.number_input("Transaction Amount Change (Q4 vs Q1)", min_value=-5.0, max_value=5.0, step=0.1, value=0.5)
+# Scale the input data using the fitted scaler
+scaled_input = scaler.transform(input_df)
 
-# Dropdowns for education and income
-education = st.selectbox(
-    "Education Level",
-    ["College", "Doctorate", "Graduate", "High School", "Post-Graduate", "Uneducated"]
-)
-income = st.selectbox(
-    "Income Bracket",
-    ["$120K +", "$40K - $60K", "$60K - $80K", "$80K - $120K", "Less than $40K"]
-)
+# Predict using the loaded model
+predictions = best_rf_model.predict(scaled_input)
 
-# Prediction
-if st.button("Predict"):
-    input_data = create_input_data(age, months, credit_limit, transactions_count, transaction_amount, inactive_months,
-                                   transaction_count_change, products_used, credit_utilization, contacts,
-                                   transaction_amount_change, education, income)
-
-    # Ensure columns are in the correct order
-    input_data = input_data[expected_columns]
-
-    # Scale the input data
-    scaled_input = scaler.transform(input_data)
-
-    # Predict churn
-    prediction = model.predict(scaled_input)
-    result = "Churn" if prediction[0] == 1 else "No Churn"
-    st.success(f"Prediction: {result}")
+# Output predictions
+print("Predictions:", predictions)
