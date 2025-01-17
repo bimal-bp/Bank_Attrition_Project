@@ -8,7 +8,7 @@ scaler = joblib.load("scaler.pkl")
 
 # Define columns expected by the model
 expected_columns = [
-    'Customer_Age', 'Credit_Limit', 'Total_Transactions_Count',
+    'Customer_Age', 'Months_as_Customer', 'Credit_Limit', 'Total_Transactions_Count',
     'Total_Transaction_Amount', 'Inactive_Months_12_Months',
     'Transaction_Count_Change_Q4_Q1', 'Total_Products_Used',
     'Average_Credit_Utilization', 'Customer_Contacts_12_Months',
@@ -18,13 +18,14 @@ expected_columns = [
 ]
 
 # Helper function to create input data
-def create_input_data(age, credit_limit, transactions_count, transaction_amount, inactive_months,
+def create_input_data(age, months, credit_limit, transactions_count, transaction_amount, inactive_months,
                       transaction_count_change, products_used, credit_utilization, contacts,
                       transaction_amount_change, education, income):
     # Initialize the input data
     input_data = {col: 0 for col in expected_columns}
     input_data.update({
         'Customer_Age': age,
+        'Months_as_Customer': months,
         'Credit_Limit': credit_limit,
         'Total_Transactions_Count': transactions_count,
         'Total_Transaction_Amount': transaction_amount,
@@ -51,6 +52,7 @@ st.title("Bank Customer Churn Prediction")
 
 # Input fields
 age = st.slider("Customer Age", min_value=18, max_value=100, value=35)
+months = st.number_input("Months as Customer", min_value=1, step=1, value=12)
 credit_limit = st.number_input("Credit Limit", min_value=0.0, step=100.0, value=5000.0)
 transactions_count = st.number_input("Total Transactions Count", min_value=0, step=1, value=50)
 transaction_amount = st.number_input("Total Transaction Amount", min_value=0.0, step=10.0, value=3000.0)
@@ -73,7 +75,7 @@ income = st.selectbox(
 
 # Prediction
 if st.button("Predict"):
-    input_data = create_input_data(age, credit_limit, transactions_count, transaction_amount, inactive_months,
+    input_data = create_input_data(age, months, credit_limit, transactions_count, transaction_amount, inactive_months,
                                    transaction_count_change, products_used, credit_utilization, contacts,
                                    transaction_amount_change, education, income)
 
